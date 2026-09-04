@@ -77,6 +77,16 @@
     animation: flow 2.1s linear infinite;
   }
 
+  /* second ring: edges feeding a green (predecessor) node, or leaving a red
+     (successor) node -- a plain, static light-grey, no flow animation */
+  path.link.reflect {
+    stroke: #a0aab3 !important;
+    marker-end: url(#arrow-lightgrey) !important;
+    stroke-dasharray: 8 3 !important;
+    animation: flow 2.1s linear infinite;
+    /* animation: none !important; */
+  }
+
   @keyframes flow {
     to {
       /* negative direction walks the dash pattern from path-start to
@@ -204,6 +214,11 @@
     makeArrowMarker("arrow", "#8a94a0");
     makeArrowMarker("arrow-green", "#2ecc59");
     makeArrowMarker("arrow-red", "#ff5a48");
+    makeArrowMarker("arrow-lightgrey", "#8f979e");
+
+    function nodeIdOf(x) {
+      return (x && typeof x === "object") ? x.id : x;
+    }
 
     var linkedByIndex = {};
     var num_links = {};
@@ -424,6 +439,13 @@
         });
         path.classed("outgoing", function(link) {
           return active && link.source === d;
+        });
+        path.classed("reflect", function(link) {
+          if (!active) return false;
+          var s = nodeIdOf(link.source), t = nodeIdOf(link.target);
+          var targetIsGreen = linkedByIndex[t + "," + d.id]; // t -> hovered exists, so t is a green predecessor
+          var sourceIsRed = linkedByIndex[d.id + "," + s]; // hovered -> s exists, so s is a red successor
+          return !!(targetIsGreen || sourceIsRed);
         });
         node.classed("ingoing", function(node) {
           return active && linkedByIndex[node.id + "," + d.id];
