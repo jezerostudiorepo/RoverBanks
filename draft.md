@@ -133,7 +133,7 @@ You can access the content of a table by following it with a frame with no space
         4, 5,
         seven: 7,
         {4 + 4}: [eight],
-        nine: ([some], [sub], [table])
+        nine: ([some], [sub], [table], [= # < 0]: [negative])
 
     )[/nine/0]
 
@@ -152,7 +152,7 @@ Wildcards below are listed in increasing priority — an exact match always wins
 | `%` | Default index: used if no numeric key is found |
 | `\|a\|b` | Synonyms: a key having several "names" |
 | `abc123` | Exact key or index |
-| `=(# > 10)` | A boolean formula testing the key denoted by `#` |
+| `=(max < # * 2.5)` | A boolean formula testing the key denoted by `#` |
 
 
 
