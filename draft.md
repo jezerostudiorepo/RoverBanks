@@ -404,4 +404,6 @@ A table can easily be used to describe a directed graph, like the one that const
 
 MAP is a special but simple bank. It contains the directed graph of the system, which defines what banks each rover is allowed to read from and write to.
 
+Below, banks are grey pills, and rovers are rectangles.
+
 ![map](screenshot.jpg)
