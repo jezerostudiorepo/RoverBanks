@@ -1,8 +1,6 @@
 # RoverBanks
 
 
-![map](screenshot.jpg)
-
 
 ## What it is
 
@@ -87,7 +85,7 @@ The value of a script is a table containing the results of all its computations 
 =>  ( {}, [MATH:], [4 + 4 =], 8 )
 ```
 
-This result is then converted to a frame, is the script appears in a frame.
+This result is then converted to a frame, if the script appears in a frame.
 
 ```
 =>  [MATH: 4 + 4 = 8]
@@ -118,7 +116,7 @@ It can contain:
 => [The result of { 4 + 4 } is 8.]
 ```
 
-The content of a file is considered a frame: this is the base type of a RoverBanks script.
+The content of a file is considered as a frame: this is the base type of a RoverBanks script.
 
 As in HTML, several consecutive spaces and line breaks are replaced by a single space. The result is trimmed.
 
@@ -406,3 +404,4 @@ A table can easily be used to describe a directed graph, like the one that const
 
 MAP is a special but simple bank. It contains the directed graph of the system, which defines what banks each rover is allowed to read from and write to.
 
+![map](screenshot.jpg)
