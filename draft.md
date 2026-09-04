@@ -146,12 +146,13 @@ If the 1st character of the address is a slash, this activates graphmaster mode.
 
 Wildcards below are listed in increasing priority — an exact match always wins over a fallback:
 
-| Wildcard | Description |
+| Wildcard | Description (increasing priority) |
 |---|---|
 | `*` | Default key: used if no match is found |
 | `%` | Default index: used if no numeric key is found |
 | `\|a\|b` | Synonyms: a key having several "names" |
-| `abc123` | Exact key or index: always highest priority |
+| `abc123` | Exact key or index |
+| `=(# > 10)` | A boolean formula testing the key denoted by `#` |
 
 
 
