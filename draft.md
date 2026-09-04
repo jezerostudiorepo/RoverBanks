@@ -31,10 +31,10 @@ Texts and numbers belong to the "frame" type.
 
 ## Sources
 
-A source is a resource containing either:
+A source is a resource of either:
 - RiverBanks source code,
 - Javascript code,
-- Some generative AI.
+- A third party service.
 
 Banks are themselves sources too.
 
@@ -323,6 +323,14 @@ When one type is applied to another.
 
 A script cannot be applied to anything.
 Nothing can be applied to a script.
+
+```
+( [], [], [], ...)( ) == ( [], ( (), (), (), ...) )
+<list of strings>  =>  <1 pattern> + <N universes>
+
+[]( (), (), (), ...) == ( [], [], [], ...)
+<1 pattern> + <N universes> => <list of strings>
+```
 
 
 
