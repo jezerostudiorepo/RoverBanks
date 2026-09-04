@@ -30,8 +30,7 @@ body {
 
 
 body * {
-    scrollbar-color: #aaa #202020;
-    scrollbar-width: thin;
+    scrollbar-color: #FFFFFF20 #20202000 !important;
 }
 
 
