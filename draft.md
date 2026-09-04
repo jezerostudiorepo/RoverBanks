@@ -385,9 +385,9 @@ Listed from lowest to highest precedence.
 | 3 | `\|\|` | Logical OR, lazy |
 | 4 | `&&` | Logical AND, lazy |
 | 5 | `!` | Logical NOT (unary) |
-| 6 | `==` `!=` `<` `>` `<=` `>=` | Equality and comparison (same tier; left-to-right) |
+| 6 | `==` `!=` `<` `>` `<=` `>=` | Equality and comparison (same tier; left-to-right). When texts are compared, the result indicate inclusion |
 | 7 | `+` `-` | Addition, subtraction, concatenation, removal |
-| 8 | `*` `/` `%` | Multiplication, division, modulo |
+| 8 | `*` `/` `%` | Multiplication, division, modulo. When text is divided, it is split by text and results in a table |
 | 9 | `^` | Exponentiation (right-associative) |
 | 10 | `-` (unary) | Numeric negation, e.g. `-4` |
 | 11 | `#` `@` | Loop: `#` is the current-item reference, `@` binds the source table |
