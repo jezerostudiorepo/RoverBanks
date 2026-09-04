@@ -395,6 +395,29 @@ Listed from lowest to highest precedence.
 
 
 
+## Using graphmaster mode in a scope
+
+It is legal to use graphmaster mode for accessing variables in the scope. In the example, we acess the variable `15`.
+
+```
+    [{
+        [=(# > threshold)] <- [above]
+        [=(# <= threshold)] <- [not above]
+
+        [threshold] <- 10
+        
+        [Before, we're {15}.]
+
+        [threshold] <- 20
+        
+        [After, we're {15}.]
+    }]
+
+=>  [Before, we're above. After, we're not above.]
+```
+
+
+
 ## Using a table as a graph language
 
 A table can easily be used to describe a directed graph, like the one that constitutes the architecture of the system itself, simply by declaring the edges as key-value pairs.
