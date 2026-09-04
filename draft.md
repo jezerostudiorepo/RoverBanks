@@ -67,6 +67,8 @@ The key of a table is always converted to a frame.
     )
 ```
 
+As syntactice sugar, square brackets are not required around a key if it contains only aphanumeric characters.
+
 
 
 ## Scripts
@@ -121,6 +123,22 @@ It can contain:
 The content of a file is considered as a frame: this is the base type of a RoverBanks script.
 
 As in HTML, several consecutive spaces and line breaks are replaced by a single space. The result is trimmed.
+
+
+
+## Variables
+
+Inside a frame, there are variables that can be called by their name. To assign a value to a variable, we use assignment `->` or `<-`, works both ways.
+
+```
+    [
+        { [total] <- 5 + 5 }
+
+        The result is {total}.
+    ]
+
+=>  [The result is 10.]
+```
 
 
 
