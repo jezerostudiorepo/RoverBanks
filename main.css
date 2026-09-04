@@ -57,7 +57,7 @@ body * {
 
 
 #editor {
-    width: calc(100% - 0px);
+    width: calc(100% - 20px);
     resize: none;
     outline: none;
     border: none;

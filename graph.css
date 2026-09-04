@@ -118,7 +118,8 @@
   }
 
   text {
-    fill: #e9edf0;
+    /* fill: #e9edf0; */
+    fill: white;
     font-family: Roboto;
     font-size: 11px;
     pointer-events: none;
@@ -149,7 +150,7 @@
   rect.box.ingoing,
   rect.box.outgoing,
   rect.box.selected {
-    fill: #000000 !important;
+    fill: #202020 !important;
   }
 
   /* text should never get a stroke: an outline around glyphs reads as bold.
