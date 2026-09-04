@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RoverBanks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
+<style>
+  html, body {
+    margin: 0;
+    background: #121417;
+  }
+
+  #controls {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 18px;
+    color: #cfd8dc;
+    font: 12px sans-serif;
+    padding: 6px 12px;
+    z-index: 10;
+    background: rgba(18, 20, 23, 0.7);
+    box-sizing: border-box;
+  }
+
+  #controls label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    margin: 0;
+  }
+
+  #controls input[type="range"] {
+    vertical-align: middle;
+    width: 110px;
+  }
+
+  #chart {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background: #121417;
+    overflow: hidden;
+  }
+
+  #chart svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+
+  path.link {
+    fill: none;
+    stroke: #5c6672;
+    stroke-width: 1.5px;
+    marker-end: url(#arrow);
+  }
+
+  path.link.ingoing {
+    marker-end: url(#arrow-green);
+    stroke-dasharray: 8 3;
+    animation: flow 2.1s linear infinite;
+  }
+
+  path.link.outgoing {
+    marker-end: url(#arrow-red);
+    stroke-dasharray: 8 3;
+    animation: flow 2.1s linear infinite;
+  }
+
+  @keyframes flow {
+    to {
+      /* negative direction walks the dash pattern from path-start to
+         path-end, i.e. along the source -> target direction of flow */
+      stroke-dashoffset: -21;
+    }
+  }
+
+  .node rect.box {
+    stroke-width: 1.5px;
+  }
+
+  /* rectangles: square corners, grey-blue fill */
+  .node.shape-rect rect.box {
+    fill: #3b4d5c;
+    stroke: #4a90d9;
+  }
+
+  /* pills: fully rounded, pure-grey fill */
+  .node.shape-ellipse rect.box {
+    fill: #4a4a4a;
+    stroke: #b9bec4;
+  }
+
+  /* perfect circles: yellow fill */
+  .node.shape-circle rect.box {
+    stroke: #808080;
+    fill: black;
+  }
+
+  /* the three SENSORS and three ACTUATORS share BODY's color scheme,
+     regardless of their own rect/pill/circle shape */
+  .node.io-boundary rect.box {
+    stroke: #dbb433;
+    fill: #634402;
+  }
+
+  .node.io-boundary text {
+    fill: white;
+  }
+
+  text {
+    fill: #e9edf0;
+    font: 11px sans-serif;
+    pointer-events: none;
+    text-anchor: middle;
+  }
+
+  /* dark text for readability against the circle's bright yellow fill */
+  .node.shape-circle text {
+    fill: white;
+  }
+
+  .ingoing {
+    stroke: #2ecc59 !important;
+    stroke-width: 2px !important;
+  }
+
+  .outgoing {
+    stroke: #ff5a48 !important;
+    stroke-width: 2px !important;
+  }
+
+  .selected {
+    stroke: #ffffff !important;
+    stroke-width: 2px !important;
+  }
+
+  /* highlighted boxes go black, regardless of their normal grey-blue/grey fill */
+  rect.box.ingoing,
+  rect.box.outgoing,
+  rect.box.selected {
+    fill: #000000 !important;
+  }
+
+  /* text should never get a stroke: an outline around glyphs reads as bold.
+     Recolor via fill instead when a node's label is highlighted. */
+  text.ingoing {
+    stroke: none !important;
+    fill: #2ecc59 !important;
+  }
+
+  text.outgoing {
+    stroke: none !important;
+    fill: #ff5a48 !important;
+  }
+
+  text.selected {
+    stroke: none !important;
+    fill: #ffffff !important;
+  }
+</style>
+</head>
+
+<body>
+  <div id="chart"></div>
+  <div id="controls">
+    <label><input type="checkbox" id="cb_curved" checked="True" onclick='redraw();'>Curves</label>
+    <label>Spacing <input type="range" id="spacing" min="0.00001" max="0.05" step="0.0005" value="0.025" oninput='redraw();'></label>
+    <label>Fluidity <input type="range" id="alphaTarget" min="0" max="1" step="0.01" value="0.3"></label>
+  </div>
+  <script>
+    graph = {"directed": true, "graph": [], "nodes": [{"id": 0, "name": "SALIENCE DETECTOR", "group": "PERCEPTION", "level": 2, "shape": "rect"}, {"id": 1, "name": "FOCUS FILTER", "group": "PERCEPTION", "level": 2, "shape": "rect"}, {"id": 2, "name": "EXTERNAL SENSORS", "group": "PERCEPTION", "level": 0, "shape": "rect"}, {"id": 3, "name": "INTERNAL SENSORS", "group": "PERCEPTION", "level": 0, "shape": "rect"}, {"id": 4, "name": "CURRENT PERCEPTION", "group": "PERCEPTION", "level": 1, "shape": "ellipse"}, {"id": 5, "name": "STREAM WORKBENCH", "group": "PERCEPTION", "level": 2, "shape": "ellipse"}, {"id": 6, "name": "FOCUS QUERY", "group": "PERCEPTION", "level": 2, "shape": "ellipse"}, {"id": 7, "name": "ASSOCIATIVE RECORDER", "group": "MEMORY", "level": 2, "shape": "rect"}, {"id": 8, "name": "GENERALIZER", "group": "MEMORY", "level": 2, "shape": "rect"}, {"id": 9, "name": "CHRONO-SCHEMATIC MEMORY", "group": "MEMORY", "level": 2, "shape": "ellipse"}, {"id": 10, "name": "EPISODIC MEMORY", "group": "MEMORY", "level": 2, "shape": "ellipse"}, {"id": 11, "name": "INDUCTION FIELDS", "group": "MEMORY", "level": 0, "shape": "ellipse"}, {"id": 12, "name": "SYMBOLIC MEMORY", "group": "MEMORY", "level": 0, "shape": "ellipse"}, {"id": 13, "name": "PLAN GENERATOR", "group": "PLANNING", "level": 3, "shape": "rect"}, {"id": 14, "name": "ACTION UPDATER", "group": "PLANNING", "level": 5, "shape": "rect"}, {"id": 15, "name": "BEHAVIOR TRACKER", "group": "PLANNING", "level": 5, "shape": "rect"}, {"id": 16, "name": "AVAILABLE ACTIONS", "group": "PLANNING", "level": 5, "shape": "ellipse"}, {"id": 17, "name": "PLANS", "group": "PLANNING", "level": 4, "shape": "ellipse"}, {"id": 18, "name": "CURRENT BEHAVIOR", "group": "PLANNING", "level": 5, "shape": "ellipse"}, {"id": 19, "name": "GOALS HIERARCHY", "group": "PLANNING", "level": 0, "shape": "ellipse"}, {"id": 20, "name": "DRIVER", "group": "ACTION", "level": 5, "shape": "rect"}, {"id": 21, "name": "EXTERNAL ACTUATORS", "group": "ACTION", "level": 6, "shape": "rect"}, {"id": 22, "name": "INTERNAL ACTUATORS", "group": "ACTION", "level": 6, "shape": "rect"}, {"id": 23, "name": "ACTION IN PROGRESS", "group": "ACTION", "level": 5, "shape": "ellipse"}, {"id": 24, "name": "INTERPRETER", "group": "INTERPRETATION", "level": 3, "shape": "rect"}, {"id": 25, "name": "HIGH-LEVEL VISION", "group": "INTERPRETATION", "level": 4, "shape": "ellipse"}, {"id": 26, "name": "POINT OF VIEW", "group": "INTERPRETATION", "level": 0, "shape": "ellipse"}, {"id": 27, "name": "SCENOGRAPHER", "group": "SKETCHPAD", "level": 3, "shape": "rect"}, {"id": 28, "name": "TIMELINES", "group": "SKETCHPAD", "level": 4, "shape": "ellipse"}, {"id": 29, "name": "HYPOTHESES", "group": "SKETCHPAD", "level": 0, "shape": "ellipse"}, {"id": 30, "name": "GUARDIAN", "group": "METACONTROL", "level": 2, "shape": "rect"}, {"id": 31, "name": "STRUCTURAL SENSOR", "group": "METACONTROL", "level": 0, "shape": "rect"}, {"id": 32, "name": "STRUCTURAL ACTUATOR", "group": "METACONTROL", "level": 4, "shape": "rect"}, {"id": 33, "name": "ACTUAL SELF STRUCTURE", "group": "METACONTROL", "level": 1, "shape": "ellipse"}, {"id": 34, "name": "WANTED SELF STRUCTURE", "group": "METACONTROL", "level": 3, "shape": "ellipse"}, {"id": 35, "name": "EXT", "group": "PHYSICAL", "level": -1, "shape": "circle"}, {"id": 36, "name": "MAP", "group": "PHYSICAL", "level": -1, "shape": "circle"}], "links": [{"source": 2, "target": 4}, {"source": 3, "target": 4}, {"source": 9, "target": 0}, {"source": 4, "target": 0}, {"source": 0, "target": 6}, {"source": 4, "target": 1}, {"source": 6, "target": 1}, {"source": 1, "target": 5}, {"source": 26, "target": 24}, {"source": 24, "target": 25}, {"source": 5, "target": 24}, {"source": 12, "target": 24}, {"source": 5, "target": 27}, {"source": 27, "target": 28}, {"source": 9, "target": 27}, {"source": 29, "target": 27}, {"source": 5, "target": 7}, {"source": 7, "target": 10}, {"source": 10, "target": 8}, {"source": 8, "target": 9}, {"source": 11, "target": 8}, {"source": 10, "target": 27}, {"source": 19, "target": 13}, {"source": 13, "target": 17}, {"source": 17, "target": 14}, {"source": 14, "target": 16}, {"source": 23, "target": 15}, {"source": 15, "target": 18}, {"source": 18, "target": 14}, {"source": 5, "target": 13}, {"source": 9, "target": 13}, {"source": 16, "target": 20}, {"source": 5, "target": 20}, {"source": 20, "target": 23}, {"source": 23, "target": 21}, {"source": 23, "target": 22}, {"source": 31, "target": 33}, {"source": 33, "target": 32}, {"source": 34, "target": 32}, {"source": 33, "target": 30}, {"source": 30, "target": 34}, {"source": 25, "target": 3}, {"source": 18, "target": 3}, {"source": 33, "target": 3}, {"source": 17, "target": 3}, {"source": 28, "target": 3}, {"source": 16, "target": 3}, {"source": 22, "target": 29}, {"source": 22, "target": 12}, {"source": 22, "target": 26}, {"source": 22, "target": 34}, {"source": 22, "target": 6}, {"source": 22, "target": 11}, {"source": 22, "target": 19}, {"source": 35, "target": 2}, {"source": 21, "target": 35}, {"source": 32, "target": 36}, {"source": 36, "target": 31}], "multigraph": false};
+
+    var cb_curved = document.getElementById("cb_curved");
+    var chartDiv = document.getElementById("chart");
+    var svg = d3.select(chartDiv).append("svg");
+
+    var defs = svg.append("svg:defs");
+
+    function makeArrowMarker(id, color) {
+      defs.append("marker")
+        .attr("id", id)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 8)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", color);
+    }
+
+    makeArrowMarker("arrow", "#8a94a0");
+    makeArrowMarker("arrow-green", "#2ecc59");
+    makeArrowMarker("arrow-red", "#ff5a48");
+
+    var linkedByIndex = {};
+    var num_links = {};
+    graph.links.forEach(function(d) {
+      linkedByIndex[d.source + "," + d.target] = 1;
+      num_links[d.target] = (num_links[d.target] != undefined ? num_links[d.target] + 1 : 1)
+      num_links[d.source] = (num_links[d.source] != undefined ? num_links[d.source] + 1 : 1)
+      d.distance = Math.abs(graph.nodes[d.target].level - graph.nodes[d.source].level);
+    });
+
+    const maxlevel = graph.nodes.reduce(function(currentValue, node) {
+      return Math.max(node.level, currentValue);
+    }, 0);
+
+    var simulation = d3.forceSimulation(graph.nodes)
+      .on('tick', tick);
+
+    // everything pannable/zoomable lives in this group; defs (markers) stay
+    // outside it since they're referenced by id, not rendered in place.
+    var viewport = svg.append("g").attr("class", "viewport");
+
+    var zoomBehavior = d3.zoom()
+      .scaleExtent([0.05, 4])
+      .on("zoom", zoomed);
+
+    svg.call(zoomBehavior);
+
+    // this d3 build has no zoom.wheelDelta() to tune scroll sensitivity, so
+    // swap in a custom wheel handler with a much smaller multiplier than the
+    // default for a very smooth, fine-grained zoom instead of the built-in
+    // chunky per-notch jumps.
+    svg.on("wheel.zoom", null);
+    svg.on("wheel", function() {
+      d3.event.preventDefault();
+      var factor = Math.pow(2, -d3.event.deltaY * 0.0015);
+      zoomBehavior.scaleBy(svg, factor);
+    });
+
+    var currentTransform = d3.zoomIdentity;
+
+    function zoomed() {
+      currentTransform = d3.event.transform;
+      viewport.attr("transform", currentTransform);
+    }
+
+    var alphaTargetSlider = document.getElementById('alphaTarget');
+    alphaTargetSlider.addEventListener("input", function() {
+      var v = parseFloat(alphaTargetSlider.value) || 0;
+      simulation.alphaTarget(v);
+      if (v > 0) simulation.restart();
+    });
+
+    // add the links
+    var linkLayer = viewport.append("g").attr("class", "links");
+
+    var path = linkLayer.selectAll("path.link")
+      .data(graph.links)
+      .enter().append("svg:path")
+      .attr("class", "link");
+
+    // the three SENSORS and three ACTUATORS get BODY's color scheme
+    var IO_BOUNDARY_NAMES = {
+      "EXTERNAL SENSORS": true, "INTERNAL SENSORS": true, "STRUCTURAL SENSOR": true,
+      "EXTERNAL ACTUATORS": true, "INTERNAL ACTUATORS": true, "STRUCTURAL ACTUATOR": true
+    };
+
+    // define the nodes
+    var node = viewport.selectAll(".node")
+      .data(graph.nodes)
+      .enter().append("g")
+      .attr("class", function(d) {
+        var cls = "node shape-" + d.shape;
+        if (IO_BOUNDARY_NAMES[d.name]) cls += " io-boundary";
+        return cls;
+      })
+      .on("mouseover", highlight(true))
+      .on("mouseout", highlight(false))
+      .on("contextmenu", function() { d3.event.preventDefault(); })
+      .call(d3.drag()
+        .filter(function() {
+          // allow left (0) and right (2) buttons to start a drag; d3's
+          // default filter only allows left-click
+          return !d3.event.ctrlKey && d3.event.button !== 1;
+        })
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    // background box: square corners for "rect" nodes, a full pill for "ellipse" nodes
+    var box = node.append("rect")
+      .attr("class", "box");
+
+    // text sits inside the box, centered
+    var title = node.append("text")
+      .attr("x", 0)
+      .attr("dy", ".35em")
+      .text(function(d) {
+        return d.name;
+      });
+
+    // size each box to fit its own label, once (text doesn't change afterwards)
+    const NODE_HEIGHT = 24;
+    const PAD_X = 12;
+    title.each(function(d) {
+      var bbox = this.getBBox();
+      if (d.shape === "circle") {
+        // a true circle: both dimensions equal, grown to fit the text in
+        // whichever direction needs more room (usually width)
+        var r = Math.max(NODE_HEIGHT / 2, bbox.width / 2 + PAD_X);
+        d.hh = r;
+        d.hw = r;
+        d.rx = r;
+      } else {
+        d.hh = NODE_HEIGHT / 2;
+        d.hw = Math.max(bbox.width / 2 + PAD_X, d.hh + 6);
+        d.rx = (d.shape === "ellipse") ? d.hh : 0;
+      }
+    });
+
+    box
+      .attr("x", function(d) { return -d.hw; })
+      .attr("y", function(d) { return -d.hh; })
+      .attr("width", function(d) { return d.hw * 2; })
+      .attr("height", function(d) { return d.hh * 2; })
+      .attr("rx", function(d) { return d.rx; })
+      .attr("ry", function(d) { return d.rx; });
+
+    function dragstarted(d) {
+      // remember which button started this gesture: right-click pins the
+      // node permanently, left-click is a normal drag (and un-pins the node
+      // if it was previously pinned by a right-click).
+      d.__pinDrag = d3.event.sourceEvent && d3.event.sourceEvent.button === 2;
+      if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(d) {
+      // d3.drag's default container is the dragged element's parent (our
+      // zoomed "viewport" group), so d3.event.x/y already account for the
+      // current pan/zoom transform -- no manual scale compensation needed.
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
+
+    function dragended(d) {
+      if (!d3.event.active) simulation.alphaTarget(0);
+      if (!d.__pinDrag) {
+        // left-click drag: release the node back to the simulation (also
+        // un-pins it if it had been pinned in place by an earlier right-click)
+        d.fx = null;
+        d.fy = null;
+      }
+      // right-click drag: leave fx/fy set so the node stays exactly where
+      // it was dropped, as if still being dragged
+    }
+
+    // point on a node's boundary along a given direction from its center, with an outward pad.
+    // rectangular corner formula for rects/pills; exact circular formula for true circles
+    // (hw === hh), since the rectangular formula would overshoot to the corner of the
+    // invisible bounding square instead of landing on the actual round edge.
+    function boxEdgePoint(n, dirX, dirY, pad) {
+      if (dirX === 0 && dirY === 0) return [n.x, n.y];
+      var len = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+      var ux = dirX / len, uy = dirY / len;
+      if (n.hw === n.hh) {
+        var r = n.hw + pad;
+        return [n.x + ux * r, n.y + uy * r];
+      }
+      var t = 1 / Math.max(Math.abs(dirX) / n.hw, Math.abs(dirY) / n.hh);
+      return [n.x + dirX * t + ux * pad, n.y + dirY * t + uy * pad];
+    }
+
+    // point on the left or right side of a node's box, with an outward pad
+    function sideEdgePoint(n, side, pad) {
+      var x = (side === "right") ? n.x + n.hw + pad : n.x - n.hw - pad;
+      return [x, n.y];
+    }
+
+    function tick(e) {
+      // no boundary clamp: the canvas is infinite, pan/zoom to reach anything
+      node.attr("transform", function(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+      });
+
+      path.attr("d", function(d) {
+        if (cb_curved.checked) {
+          // curved mode: the tail always leaves from the left or right side of
+          // the source box, starting out perfectly horizontal; the head points
+          // straight at the target's center (clipped to whichever edge that
+          // line actually crosses) with no curvature forced at the arrival end.
+          var goingRight = d.target.x >= d.source.x;
+          var sp = sideEdgePoint(d.source, goingRight ? "right" : "left", 2);
+          var dxc = d.target.x - d.source.x, dyc = d.target.y - d.source.y;
+          var tp = boxEdgePoint(d.target, -dxc, -dyc, 3);
+          // single control point, level with sp and offset outward in the
+          // direction the tail already faces: gives a horizontal departure
+          // that bends once and runs straight into the head, rather than an
+          // S-curve with a second, separately-curved approach at the head.
+          var horiz = Math.max(Math.abs(tp[0] - sp[0]) * 0.5, 40);
+          var cx = sp[0] + (goingRight ? horiz : -horiz);
+          var cy = sp[1];
+          return "M" + sp[0] + "," + sp[1] +
+            "Q" + cx + "," + cy + " " + tp[0] + "," + tp[1];
+        } else {
+          // straight mode: clip to whichever edge of the target box faces the source
+          var dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
+          var tp = boxEdgePoint(d.target, -dx, -dy, 3);
+          return "M" + d.source.x + "," + d.source.y + "L" + tp[0] + "," + tp[1];
+        }
+      });
+    }
+
+    function highlight(active) {
+      return function(d, i) {
+        path.classed("ingoing", function(link) {
+          return active && link.target === d;
+        });
+        path.classed("outgoing", function(link) {
+          return active && link.source === d;
+        });
+        node.classed("ingoing", function(node) {
+          return active && linkedByIndex[node.id + "," + d.id];
+        });
+        node.classed("outgoing", function(node) {
+          return active && linkedByIndex[d.id + "," + node.id];
+        });
+        node.classed("selected", function(node) {
+          return active && d.id === node.id;
+        });
+        box.classed("ingoing", function(node) {
+          return active && linkedByIndex[node.id + "," + d.id];
+        });
+        box.classed("outgoing", function(node) {
+          return active && linkedByIndex[d.id + "," + node.id];
+        });
+        box.classed("selected", function(node) {
+          return active && d.id === node.id;
+        });
+        title.classed("ingoing", function(node) {
+          return active && linkedByIndex[node.id + "," + d.id];
+        });
+        title.classed("outgoing", function(node) {
+          return active && linkedByIndex[d.id + "," + node.id];
+        });
+        title.classed("selected", function(node) {
+          return active && d.id === node.id;
+        });
+      };
+    }
+
+    function redraw() {
+      var width = chartDiv.clientWidth;
+      var height = chartDiv.clientHeight;
+
+      const charge = 10;
+      var spacingFactor = (parseFloat(document.getElementById('spacing').value) || 0.025) * 20;
+
+      // viewport size is just a reference scale for row/column spacing now;
+      // it's no longer a hard boundary, so it doesn't need to grow.
+      var leveldist = (height / (maxlevel + 1)) * spacingFactor;
+
+      simulation
+        .force('x', d3.forceX()
+          .x(width / 2)
+          .strength(0.05))
+        .force('y', d3.forceY()
+          .y(height / 2)
+          .strength(0.05));
+
+      function nodeId(x) {
+        return (x && typeof x === "object") ? x.id : x;
+      }
+
+      function boundingRadius(d) {
+        return Math.sqrt(d.hw * d.hw + d.hh * d.hh);
+      }
+
+      simulation.force('link', d3.forceLink()
+          .links(graph.links)
+          .strength(function(d) {
+            // weaker pull between high-degree nodes: force = 1 / (degree_node_1 + degree_node_2)
+            var deg1 = num_links[nodeId(d.source)] || 0;
+            var deg2 = num_links[nodeId(d.target)] || 0;
+            var total = deg1 + deg2;
+            return total > 0 ? 0.01 / total : 0;
+          })
+          .distance(function(d) {
+            return d.distance * leveldist
+          }))
+        .force('charge', d3.forceManyBody()
+          .strength(function(d) {
+            return -charge * boundingRadius(d) * spacingFactor;
+          }))
+        .force('collision', d3.forceCollide()
+          .radius(function(d) {
+            return boundingRadius(d);
+          }))
+        .alphaTarget(parseFloat(document.getElementById('alphaTarget').value) || 0)
+        .restart();
+    }
+
+    redraw();
+
+    // once nodes have had a moment to spread from their initial cluster into
+    // roughly their layout positions, center the camera on their actual
+    // bounding box -- this reflects collision-driven spread that the target
+    // formulas alone don't capture, so it lines up with what's really drawn.
+    setTimeout(function() {
+      var xs = graph.nodes.map(function(d) { return d.x; });
+      var ys = graph.nodes.map(function(d) { return d.y; });
+      var cx = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+      var cy = (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+      var vw = chartDiv.clientWidth, vh = chartDiv.clientHeight;
+      svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(vw / 2 - cx, vh / 2 - cy));
+    }, 700);
+
+    d3.select(window).on("resize", redraw)
+  </script>
+</body>
+
+</html>
