@@ -79,7 +79,7 @@ The value of a script is a table containing the results of all its computations 
 
 ```
     {
-        [sum] <- { {0} + {1} }
+        [sum] <- [{ {0} + {1} }]
 
         uppercase[Math:]
         [4 + 4 =]
@@ -88,6 +88,8 @@ The value of a script is a table containing the results of all its computations 
 
 =>  ( {}, [MATH:], [4 + 4 =], 8 )
 ```
+
+
 
 This result is then converted to a frame, if the script appears in a frame.
 
@@ -140,6 +142,8 @@ Inside a frame, there are variables that can be called by their name. To assign 
 =>  [The result is 10.]
 ```
 
+As can be seen, assignment is not a special form but a normal operator, which is why the variable name has to be given as text.
+
 
 
 ## Accessing the content of a table: `(...)[]`
@@ -164,7 +168,7 @@ If the 1st character of the address is a slash, this activates graphmaster mode.
 - The address is slash/separated. At each slash: child node.
 - The keys of the tables read can be treated as wildcards.
 
-Wildcards below are listed in increasing priority — an exact match always wins over a fallback:
+Wildcards below are listed in increasing priority — an exact match always wins over a fallback, except a formula:
 
 | Wildcard | Description (increasing priority) |
 |---|---|
@@ -266,7 +270,7 @@ Example:
 ```
     [
         {
-            [result] <- { {0} * 2 }
+            [result] <- {0} * 2
         }
         The double of {{0}} is {result}.
     ](4)
@@ -408,7 +412,8 @@ Listed from lowest to highest precedence.
 
 | Precedence | Operator | Description |
 |---|---|---|
-| 1 (lowest) | `->` `<-` | Assignment. Value flows in the direction of the arrow. |
+| 0 (lowest) | `#` `@` | Loop: `#` is the current-item reference, `@` binds the source table |
+| 1 | `->` `<-` | Assignment. Value flows in the direction of the arrow. |
 | 2 | `?` `:` | Ternary: `(cond ? then : else)` |
 | 3 | `\|\|` | Logical OR, lazy |
 | 4 | `&&` | Logical AND, lazy |
@@ -418,8 +423,7 @@ Listed from lowest to highest precedence.
 | 8 | `*` `/` `%` | Multiplication, division, modulo. When text is divided, it is split by text and results in a table |
 | 9 | `^` | Exponentiation (right-associative) |
 | 10 | `-` (unary) | Numeric negation, e.g. `-4` |
-| 11 | `#` `@` | Loop: `#` is the current-item reference, `@` binds the source table |
-| 12 (highest) | `()` `[]` `{}` | Grouping / table access / frame application (see relevant sections above) |
+| 11 (highest) | `()` `[]` `{}` | Grouping / table access / frame application (see relevant sections above) |
 
 
 
