@@ -110,14 +110,50 @@ var ui = {
 };
 
 
+
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) document.body.requestFullscreen();
+    else document.exitFullscreen?.();
+}
+
+
+
 ui.b("Clear editor", () => { ui.e(''); });
 ui.b("Clear terminal", () => { ui.t(); });
+ui.b("Fullscreen", () => { toggleFullScreen(); });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 setInterval(function() {
     var time = new Date();
     document.getElementById("time").innerHTML = time.getHours().toLocaleString(undefined, {minimumIntegerDigits: 2})+':'+time.getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2})+'.'+time.getSeconds().toLocaleString(undefined, {minimumIntegerDigits: 2});
 }, 1000);
+
 
 
 // sliders styling
@@ -134,5 +170,4 @@ for (slider of sliders) {
     slider.addEventListener('input', (e) => handleInput(e.target));
     handleInput(slider);
 }
-
 

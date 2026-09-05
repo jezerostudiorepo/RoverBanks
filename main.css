@@ -126,3 +126,20 @@ body * {
 #chart-controls {
     zoom: 0.5;
 }
+
+
+
+
+:fullscreen,
+:-webkit-full-screen,
+:-moz-full-screen {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+}
+
+#text-panel, #graph-panel {
+    background-color: #202020;
+}
