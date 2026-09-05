@@ -153,6 +153,15 @@
     fill: #202020 !important;
   }
 
+  /* marching-dashes animation, matching highlighted edges, on rectangle-shaped
+     nodes only (not ellipse pills or circles) */
+  .node.shape-rect rect.box.ingoing,
+  .node.shape-rect rect.box.outgoing,
+  .node.shape-rect rect.box.selected {
+    stroke-dasharray: 8 3;
+    animation: flow 2.1s linear infinite;
+  }
+
   /* text should never get a stroke: an outline around glyphs reads as bold.
      Recolor via fill instead when a node's label is highlighted. */
   text.ingoing {
