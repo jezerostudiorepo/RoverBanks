@@ -100,29 +100,17 @@
     stroke: #b9bec4;
   }
 
-  /* hex: pointy-ended pill, rendered as a real <polygon> (see JS) so every
-     edge gets a stroke, not just the flat top/bottom; same pure-grey fill
-     as pills */
+  /* hex: pointy-ended pill (table type), rendered as a real <polygon> (see
+     JS) so every edge gets a stroke, not just the flat top/bottom */
   .node.shape-hex .box {
-    fill: #4a4a4a;
-    stroke: #b9bec4;
+    fill: #634402;
+    stroke: #dbb433;
   }
 
   /* perfect circles: yellow fill */
   .node.shape-circle rect.box {
     stroke: #808080;
     fill: black;
-  }
-
-  /* the three SENSORS and three ACTUATORS share BODY's color scheme,
-     regardless of their own rect/pill/circle shape */
-  .node.io-boundary .box {
-    stroke: #dbb433;
-    fill: #634402;
-  }
-
-  .node.io-boundary text {
-    fill: white;
   }
 
   text {
