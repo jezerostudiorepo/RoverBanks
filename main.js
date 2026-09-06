@@ -119,9 +119,9 @@ function toggleFullScreen() {
 
 
 
+ui.b("Fullscreen", () => { toggleFullScreen(); });
 ui.b("Clear editor", () => { ui.e(''); });
 ui.b("Clear terminal", () => { ui.t(); });
-ui.b("Fullscreen", () => { toggleFullScreen(); });
 
 
 

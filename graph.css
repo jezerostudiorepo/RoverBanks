@@ -84,7 +84,7 @@
     }
   }
 
-  .node rect.box {
+  .node .box {
     stroke-width: 1.5px;
   }
 
@@ -100,6 +100,14 @@
     stroke: #b9bec4;
   }
 
+  /* hex: pointy-ended pill, rendered as a real <polygon> (see JS) so every
+     edge gets a stroke, not just the flat top/bottom; same pure-grey fill
+     as pills */
+  .node.shape-hex .box {
+    fill: #4a4a4a;
+    stroke: #b9bec4;
+  }
+
   /* perfect circles: yellow fill */
   .node.shape-circle rect.box {
     stroke: #808080;
@@ -108,7 +116,7 @@
 
   /* the three SENSORS and three ACTUATORS share BODY's color scheme,
      regardless of their own rect/pill/circle shape */
-  .node.io-boundary rect.box {
+  .node.io-boundary .box {
     stroke: #dbb433;
     fill: #634402;
   }
@@ -146,11 +154,19 @@
     stroke-width: 2px !important;
   }
 
-  /* highlighted boxes go black, regardless of their normal grey-blue/grey fill */
-  rect.box.ingoing,
-  rect.box.outgoing,
-  rect.box.selected {
+  /* highlighted boxes go black, regardless of their normal grey-blue/grey fill,
+     except ingoing (green) and outgoing (red) which get a tinted dark fill
+     matching their highlight color */
+  .box.selected {
     fill: #202020 !important;
+  }
+
+  .box.ingoing {
+    fill: #004000 !important;
+  }
+
+  .box.outgoing {
+    fill: #400000 !important;
   }
 
   /* marching-dashes animation, matching highlighted edges, on rectangle-shaped
@@ -158,6 +174,13 @@
   .node.shape-rect rect.box.ingoing,
   .node.shape-rect rect.box.outgoing,
   .node.shape-rect rect.box.selected {
+    stroke-dasharray: 8 3;
+    animation: flow 2.1s linear infinite;
+  }
+
+  /* nodes at the far end of a "reflect" (2nd-ring grey) edge: same dash
+     animation, but keep the rectangle's normal fill/stroke colors */
+  .node.shape-rect rect.box.reflect {
     stroke-dasharray: 8 3;
     animation: flow 2.1s linear infinite;
   }

@@ -1,20 +1,42 @@
-# RoverBanks
+# Roverbanks
 
 _Pour Céline_
 
 
 
-## What it is
+## What is Roverbanks
 
 It's a Turing-complete language for string content transformation and flow.
 
-String content is called a frame. During execution, this content will be transformed into other content, continuously.
+String content is called a frame. During execution, this content will be transformed into other content, continuously, forming a real-time flow.
 
-There are several "banks", holding content. There are several "rovers", which consume and feed the content of these banks. For this flow, a form of observer pattern is used, somewhat like a real-time spreadsheet.
+For this flow, a form of observer pattern is used, somewhat like a real-time spreadsheet.
 
-There are two special banks: MAP and EXT. The EXT bank is the input/output of the system, allowing it to interact with its environment.
+The primary purpose of Roverbanks is to provide a workspace for experimenting with synthetic phenomenal consciousness, for example in the context of driving a **rover** through ROS, like the [Transbot-SE](https://www.yahboom.net/study/Transbot-SE).
+
+![Transbot-SE](transbot-se.png)
+
+In Roverbanks, there are several "banks", holding content. A bank is just a folder containing the source code files of the system. In each bank, there's an "index" file that acts as the entry point for the bank.
+
+There are 3 types of files:
+
+- *.ZRFF - Roverbanks Frame Format,
+- *.ZRSF - Roverbanks Script Format,
+- *.ZRTF - Roverbanks Table Format
+
+The visual representation of a bank indicates the type of its index file:
+
+- index.zrff -> for a frame: a grey ellipse,
+- index.zrsf -> for a script: a blue rectangle,
+- index.zrtf -> for a table: a yellow diamond.
+
+
+
+There are two special banks that don't follow this visual scheme: MAP and EXT, both **tables**. The EXT bank is the input/output of the system, allowing it to interact with its environment.
 
 The content of EXT is read by the environment, and updated by the environment at a regular frequency.
+
+The MAP bank is an interactive reflection of the source folder structure of the system. 
 
 
 
@@ -33,20 +55,26 @@ Texts and numbers belong to the "frame" type.
 
 ## Sources
 
-A source is a resource of either:
-- RiverBanks source code,
-- Javascript code,
-- A third party service.
+A source is a resource containing Roverbanks code, Javascript code, or something else.
+
+It is called by an identifier with a `$` prefixing either:
+- A filepath pattern selecting Roverbanks source code files,
+- The identifier of a registered Javascript function,
+- The identifier of a third party service.
 
 Banks are themselves sources too.
 
 To access the content of a source for reading or writing, you give the URL of the source prefixed with `$`.
 
 ```
-    $[lib/my source code.rbfs] -> [my_code]
+    $[lib/my source code.zrsf] -> [my_code]
 ```
 
-When the content of a source is updated, this triggers an update of all frames referencing it.
+
+
+## Execution model
+
+When the value of a bank (as defined by its index) is updated, it triggers an update of all banks observing it.
 
 
 
@@ -67,7 +95,7 @@ The key of a table is always converted to a frame.
     )
 ```
 
-As syntactice sugar, square brackets are not required around a key if it contains only aphanumeric characters.
+As syntactic sugar, square brackets are not required around a key if it contains only alphanumeric characters.
 
 
 
@@ -75,7 +103,7 @@ As syntactice sugar, square brackets are not required around a key if it contain
 
 A script is denoted between braces.
 
-The value of a script is a table containing the results of all its computations (and not simply the last one obtained, or the value indicated by a "return" as is often the case).
+The value of a script is a frame containing the results of all its computations (and not simply the last one obtained, or the value indicated by a "return" as is often the case).
 
 ```
     {
@@ -86,14 +114,6 @@ The value of a script is a table containing the results of all its computations 
         sum(4, 4)
     }
 
-=>  ( {}, [MATH:], [4 + 4 =], 8 )
-```
-
-
-
-This result is then converted to a frame, if the script appears in a frame.
-
-```
 =>  [MATH: 4 + 4 = 8]
 ```
 
@@ -121,8 +141,6 @@ It can contain:
 
 => [The result of { 4 + 4 } is 8.]
 ```
-
-The content of a file is considered as a frame: this is the base type of a RoverBanks script.
 
 As in HTML, several consecutive spaces and line breaks are replaced by a single space. The result is trimmed.
 
@@ -429,10 +447,10 @@ Listed from lowest to highest precedence.
 
 ## Using graphmaster mode in a scope
 
-It is legal to use graphmaster mode for accessing variables in the scope. In the example below, we acess the variable `15` in graphmaster mode.
+It is legal to use graphmaster mode for accessing variables in the scope. In the example below, we access the variable `15` in graphmaster mode.
 
 ```
-    [{
+    {
         [=(# > threshold)] <- [above]
         [=(# <= threshold)] <- [not above]
 
@@ -443,7 +461,7 @@ It is legal to use graphmaster mode for accessing variables in the scope. In the
         [threshold] <- 20
         
         [After, we're {/15}.]
-    }]
+    }
 
 =>  [Before, we're above. After, we're not above.]
 ```
