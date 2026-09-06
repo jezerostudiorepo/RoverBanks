@@ -169,18 +169,11 @@
     fill: #400000 !important;
   }
 
-  /* marching-dashes animation, matching highlighted edges, on rectangle-shaped
-     nodes only (not ellipse pills or circles) */
-  .node.shape-rect rect.box.ingoing,
-  .node.shape-rect rect.box.outgoing,
-  .node.shape-rect rect.box.selected {
-    stroke-dasharray: 8 3;
-    animation: flow 2.1s linear infinite;
-  }
-
   /* nodes at the far end of a "reflect" (2nd-ring grey) edge: same dash
-     animation, but keep the rectangle's normal fill/stroke colors */
-  .node.shape-rect rect.box.reflect {
+     animation as the edge feeding them, but keeping their normal fill/stroke
+     colors -- applies to any shape, as long as it has a currently-animated
+     ingoing/outgoing arrow */
+  .box.reflect {
     stroke-dasharray: 8 3;
     animation: flow 2.1s linear infinite;
   }
