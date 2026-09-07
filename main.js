@@ -14,9 +14,7 @@ Split(["#editor", "#terminal"], {
 });
 
 
-
-
-Split(["#graph-panel", "#text-panel"], {
+Split(["#left-panel", "#right-panel"], {
     gutterSize: 5
 });
 
@@ -154,20 +152,4 @@ setInterval(function() {
     document.getElementById("time").innerHTML = time.getHours().toLocaleString(undefined, {minimumIntegerDigits: 2})+':'+time.getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2})+'.'+time.getSeconds().toLocaleString(undefined, {minimumIntegerDigits: 2});
 }, 1000);
 
-
-
-// sliders styling
-const sliders = document.querySelectorAll('.generator-input');
-
-for (slider of sliders) {
-    const handleInput = (el) => {
-    const min = el.min || 0;
-    const max = el.max || 100;
-    const pct = (el.value - min) / (max - min) * 100;
-    el.style.setProperty('--range-pct', pct + '%');
-    };
-
-    slider.addEventListener('input', (e) => handleInput(e.target));
-    handleInput(slider);
-}
 

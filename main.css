@@ -140,6 +140,6 @@ body * {
   margin: 0 !important;
 }
 
-#text-panel, #graph-panel {
+#left-panel, #right-panel {
     background-color: #202020;
 }

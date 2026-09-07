@@ -1,9 +1,5 @@
 # Roverbanks
 
-_Pour Céline_
-
-
-
 ## What is Roverbanks
 
 It's a Turing-complete language for string content transformation and flow.
@@ -11,10 +7,6 @@ It's a Turing-complete language for string content transformation and flow.
 String content is called a frame. During execution, this content will be transformed into other content, continuously, forming a real-time flow.
 
 For this flow, a form of observer pattern is used, somewhat like a real-time spreadsheet.
-
-The primary purpose of Roverbanks is to provide a workspace for experimenting with synthetic phenomenal consciousness, for example in the context of driving a **rover** through ROS, like the [Transbot-SE](https://www.yahboom.net/study/Transbot-SE).
-
-![Transbot-SE](transbot-se.png)
 
 In Roverbanks, there are several "banks", holding content. A bank is just a folder containing the source code files of the system. In each bank, there's an "index" file that acts as the entry point for the bank.
 
@@ -24,19 +16,11 @@ There are 3 types of files:
 - *.ZRSF - Roverbanks Script Format,
 - *.ZRTF - Roverbanks Table Format
 
-The visual representation of a bank indicates the type of its index file:
+The entry point of a bank depends on the type of its index file:
 
-- index.zrff -> for a frame: a grey ellipse,
-- index.zrsf -> for a script: a blue rectangle,
-- index.zrtf -> for a table: a yellow diamond.
-
-
-
-There are two special banks that don't follow this visual scheme: MAP and EXT, both **tables**. The EXT bank is the input/output of the system, allowing it to interact with its environment.
-
-The content of EXT is read by the environment, and updated by the environment at a regular frequency.
-
-The MAP bank is an interactive reflection of the source folder structure of the system. 
+- index.zrff -> the bank is a frame,
+- index.zrsf -> the bank is a script,
+- index.zrtf -> the bank a table.
 
 
 
@@ -46,8 +30,8 @@ The MAP bank is an interactive reflection of the source folder structure of the 
 |---|---|---|
 | Table | `( )` | array, object/dictionary, and set at once — access style determines which |
 | Script | `{ }` | a sequence of computations |
-| Frame | `[ ]` | text content; the base type of a source file |
-| Source | `$` prefix | a reference to external content (see below) |
+| Frame | `[ ]` | text content, with scripts and tables inclusion |
+| Source | `$`prefix | a reference to external content (see below) |
 
 Texts and numbers belong to the "frame" type.
 
@@ -198,9 +182,15 @@ Wildcards below are listed in increasing priority — an exact match always wins
 
 
 
+## Calling a script with arguments: `{...}()`
+
+This is the same as applying a table to a frame, see next section.
+
+
+
 ## Applying a table to a frame: `[...]()`
 
-It is possible to "apply" a table to a frame, by following the frame with the table with no space separating them. This is somewhat like a function call, or a macro.
+It is possible to "apply" a table to a frame, by following the frame with the table with no space separating them.
 
 ```
     [
@@ -358,6 +348,7 @@ When one type is applied to another.
 
 | Application | Description |
 |---|---|
+| `{script}(table)` | Provides a multiscope to a script. |
 | `(table)(table)` | Deduces a multiscope and a table (pattern gen). |
 | `(table)[frame]` | Accesses an element of the table + graphmaster mode. |
 | `[frame](table)` | Provides a multiscope to a frame. |
@@ -472,12 +463,3 @@ It is legal to use graphmaster mode for accessing variables in the scope. In the
 
 A table can easily be used to describe a directed graph, like the one that constitutes the architecture of the system itself, simply by declaring the edges as key-value pairs.
 
-
-
-## The MAP bank
-
-MAP is a special but simple bank. It contains the directed graph of the system, which defines what banks each rover is allowed to read from and write to.
-
-Below, banks are grey pills, and rovers are rectangles.
-
-![map](screenshot.jpg)
