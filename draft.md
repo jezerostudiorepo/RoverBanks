@@ -31,7 +31,7 @@ The entry point of a bank depends on the type of its index file:
 | Table | `( )` | array, object/dictionary, and set at once — access style determines which |
 | Script | `{ }` | a sequence of computations |
 | Frame | `[ ]` | text content, with scripts and tables inclusion |
-| Source | `$`prefix | a reference to external content (see below) |
+| Source | `$`prefix | source, a reference to external content (see below) |
 
 Texts and numbers belong to the "frame" type.
 
@@ -309,7 +309,7 @@ we use:
 - an infix operator `<-`: the variable on the left takes the value on the right
 
 Returns the value: `{}`
-That is: nothing, which is not the same thing as `[]` or `()`.
+That is: nothing, which is not the same thing as `()`.
 
 
 
@@ -371,17 +371,17 @@ Nothing can be applied to a script.
 
 A loop is built from three ingredients:
 
-1. **A result expression** — what gets produced on each pass. This is any script, frame, or table expression, written using `#`.
-2. **`#`, the current-item reference** — inside the result expression, `#` stands for whichever item of the source table is currently being processed. It's re-bound on every pass, the way a loop variable would be in another language.
-3. **`@ <source>`, the iteration source** — the table being walked. The loop runs once per item in this table, in order.
+1. An expression: what's calculated on each pass, any script, frame, or table, written using `#`.
+2. `#`, the current-item reference: inside this expression, `#` stands the current item being processed. It changes on every pass, the way a loop variable would in another language.
+3. `@ <source>`, the table being walked: The loop runs once per item in this table, in order.
 
 The general shape is:
 
 ```
-<result-expression using #> @ <source-table>
+<expression using #> @ <table>
 ```
 
-The loop's overall value is a table: one entry per item of the source, each built from the result expression with `#` bound to that item.
+The loop's overall value is a table, as in usual iteration.
 
 **Simplest case — a straight numeric transform:**
 
