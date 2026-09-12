@@ -39,14 +39,13 @@ Texts and numbers belong to the "frame" type.
 
 ## Sources
 
-A source is a resource containing Roverbanks code, Javascript code, or something else.
+A source is a resource containing Roverbanks code, an I/O stream, or something else.
 
-It is called by an identifier with a `$` prefixing either:
-- A filepath pattern selecting Roverbanks source code files,
-- The identifier of a registered Javascript function,
-- The identifier of a third party service.
+It is identified by a `$` prefixing a URL, that can be given as a literal or by a variable.
 
-Banks are themselves sources too.
+Banks are themselves sources too. Generally speaking, a source is "what's outside" a given bank.
+
+For external connections, sources can be viewed as a local repository mirroring content that is elsewhere, not inside the Roverbanks engine.
 
 To access the content of a source for reading or writing, you give the URL of the source prefixed with `$`.
 
@@ -54,11 +53,19 @@ To access the content of a source for reading or writing, you give the URL of th
     $[lib/my source code.zrsf] -> [my_code]
 ```
 
+Where a source is read, it is considered as "observed" in the context of the execution model.
+
 
 
 ## Execution model
 
 When the value of a bank (as defined by its index) is updated, it triggers an update of all banks observing it.
+
+The Roverbanks engine is built around a central task queue. When an update is triggered, a task identifying that update is simply added to the queue, if not already present.
+
+Tasks are executed serially.
+
+When a table, a script, or a frame, gets updated, its new value is computed and available for other parts of the system. This new value includes the URLs of the sources this table/script/frame reads from or writes to, if any.
 
 
 
@@ -79,54 +86,77 @@ The key of a table is always converted to a frame.
     )
 ```
 
-As syntactic sugar, square brackets are not required around a key if it contains only alphanumeric characters.
+As syntactic sugar, square brackets are not required around a key if it contains a frame only made of alphanumeric characters and underscores.
 
 
 
 ## Scripts
 
-A script is denoted between braces.
+A script is denoted between curly braces.
 
 The value of a script is a frame containing the results of all its computations (and not simply the last one obtained, or the value indicated by a "return" as is often the case).
+
+However, if the script manipulates multiple universes (sets of values), the resulting value will be a table of frames, rather than a single frame.
 
 ```
     {
         [sum] <- [{ {0} + {1} }]
 
-        uppercase[Math:]
+        [MATH:]
         [4 + 4 =]
-        sum(4, 4)
-    }
+        sum((4, 4))
+    }[0]
 
 =>  [MATH: 4 + 4 = 8]
 ```
 
+- First the text `{ {0} + {1} }` is assigned to a variable identified by the string `sum`. This assignment doesn't append any value by itself.
+- Then the text `MATH:` is appended as the first part of the resulting value of the script.
+- Same for the text `[4 + 4 =]`.
+- Then, a table of tables `((4, 4))` is applied to the value of the `sum` variable, which contains the source code of the script `{ {0} + {1} }`.
+- This table of tables contains only one table, which is interpreted as one universe (one set of values).
+- The application of this table of 1 universe to this script triggers the evaluation of the script, which is rendered as a table of 1 solution corresponding to the only given universe. Conceptually, this event *forks* the containing script evaluation (but in this case obviously, the fork contains only one universe).
+- The main containing script is then rendered as a table of values, containing the only value produced: `([MATH: 4 + 4 = 8])`
+- We then ask for the first of these values using `[0]`, which renders the final `[MATH: 4 + 4 = 8]`.
+
+When a script is evaluated and thus rendered as a frame, multiple consecutive newlines and spaces are replaced by a single space. That's why in our example, `MATH:` and `[4 + 4 =]` end up separated only by a space, instead of a newline plus indentation.
 
 
-## The frame
+
+## Frames
 
 A frame is denoted between brackets.
 
-The frame is a value of text type.
+The frame is a value of type string.
 
 It can contain:
 - text,
 - a number,
+- a table,
 - scripts, which will be replaced by their value, and
 - nested frames, which will be embedded as-is.
 
 ```
-    [
-        The result of
-        [{ 4 + 4 }]
-        is
-        { 4 + 4 }.
-    ]
+    [The result of [{ 4 + 4 }] is { 4 + 4 }.]
 
-=> [The result of { 4 + 4 } is 8.]
+=>  [The result of { 4 + 4 } is 8.]
 ```
 
-As in HTML, several consecutive spaces and line breaks are replaced by a single space. The result is trimmed.
+A frame is therefore a *quasi-quoting* element, with included scripts acting as the "unquoted parts" of the quoted content.
+
+When a frame is rendered, newlines and spaces are preserved exactly (unlike what happens when a script is converted to a frame).
+
+A frame containing a number will be treated as a number when the context needs a number, for example when doing an addition.
+
+
+
+## Scopes
+
+Scripts and frames have zero or more scopes.
+
+A scope is a table that contains the variables that are available.
+
+We sometimes use the term "multiscope", because when several scopes are present, they provide different sets of values for the variables, essentially forming a "multiverse" of possibilities.
 
 
 
@@ -141,7 +171,11 @@ Inside a frame, there are variables that can be called by their name. To assign 
         The result is {total}.
     ]
 
-=>  [The result is 10.]
+=>  [
+    
+
+        The result is 10.
+    ]
 ```
 
 As can be seen, assignment is not a special form but a normal operator, which is why the variable name has to be given as text.
@@ -178,7 +212,7 @@ Wildcards below are listed in increasing priority — an exact match always wins
 | `%` | Default index: used if no numeric key is found |
 | `\|a\|b` | Synonyms: a key having several "names" |
 | `abc123` | Exact key or index |
-| `=(max < # * 2.5)` | A boolean formula testing the key denoted by `#` |
+| `=(n < # * 2.5)` | A boolean formula testing the key denoted by `#` |
 
 
 
@@ -278,12 +312,15 @@ Example:
 ```
     [
         {
-            [result] <- {0} * 2
+            [result] <- {0} * 2 ;
         }
         The double of {{0}} is {result}.
-    ](4)
+    ]((4))
 
-=>  [The double of 4 is 8.]
+=>  [
+    
+        The double of 4 is 8.
+    ]
 ```
 
 
@@ -336,15 +373,21 @@ Now we have conversion choices to make.
 | script | table | An array of values (each expression). |
 | script | frame | A concatenation of values (each expression). |
 | table | script | The table itself, as a literal value. |
-| table | frame | A concatenation of values (items). |
+| table | frame | The table itself, as a literal value. |
 | frame | script | The frame itself, as a literal value. |
 | frame | table | A 1-item table. |
+
+`{}` is the literal meaning "nothing".
+
+`[]` is a frame that is empty.
+
+`()` is a table that is empty.
 
 
 
 ### Applications
 
-When one type is applied to another.
+When one type is applied to another, the application itself is semantically meaningful, and has priority over the semantics of the 2 types.
 
 | Application | Description |
 |---|---|
@@ -354,8 +397,7 @@ When one type is applied to another.
 | `[frame](table)` | Provides a multiscope to a frame. |
 | `[frame][frame]` | Searches for a pattern in a frame. |
 
-A script cannot be applied to anything.
-Nothing can be applied to a script.
+For example, when a table is applied to a script, the engine first handles the application, and only *in the context of this application* later handles the table and the script.
 
 ```
 ( [], [], [], ...)( ) == ( [], ( (), (), (), ...) )
@@ -402,7 +444,7 @@ Here `@ (1, 2, 3)` supplies three items. On each pass `#` is bound to `1`, then 
         [{what} is here]
     )
 
-    #(what: mine) @ test
+    #((what: mine)) @ test
 }
 
 =>  (
@@ -416,6 +458,8 @@ Here the source is `test`, a table of two template frames. On each pass, `#` is 
 
 
 ## Operators
+
+WIP
 
 Listed from lowest to highest precedence.
 
