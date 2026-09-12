@@ -28,7 +28,7 @@ The entry point of a bank depends on the type of its index file:
 
 | Type | Syntax | Notes |
 |---|---|---|
-| Table | `( )` | array, object/dictionary, and set at once — access style determines which |
+| Table | `( )` | array, object/dictionary, and set at once - access style determines which |
 | Script | `{ }` | a sequence of computations |
 | Frame | `[ ]` | text content, with scripts and tables inclusion |
 | Source | `$`prefix | source, a reference to external content (see below) |
@@ -204,7 +204,7 @@ If the 1st character of the address is a slash, this activates graphmaster mode.
 - The address is slash/separated. At each slash: child node.
 - The keys of the tables read can be treated as wildcards.
 
-Wildcards below are listed in increasing priority — an exact match always wins over a fallback, except a formula:
+Wildcards below are listed in increasing priority - an exact match always wins over a fallback, except a formula:
 
 | Wildcard | Description (increasing priority) |
 |---|---|
@@ -425,7 +425,7 @@ The general shape is:
 
 The loop's overall value is a table, as in usual iteration.
 
-**Simplest case — a straight numeric transform:**
+**Simplest case - a straight numeric transform:**
 
 ```
     # / (1 + #) @ (1, 2, 3)
@@ -435,7 +435,7 @@ The loop's overall value is a table, as in usual iteration.
 
 Here `@ (1, 2, 3)` supplies three items. On each pass `#` is bound to `1`, then `2`, then `3`, and the result expression `# / (1 + #)` is evaluated with that binding, producing one output per item.
 
-**Templated case — substituting into frames:**
+**Templated case - substituting into frames:**
 
 ```
 {
@@ -453,7 +453,7 @@ Here `@ (1, 2, 3)` supplies three items. On each pass `#` is bound to `1`, then 
     )
 ```
 
-Here the source is `test`, a table of two template frames. On each pass, `#` is the current template frame, and `[mine]` is applied to it as the substitution value — filling in the `{what}` placeholder — giving one filled-in frame per item of `test`.
+Here the source is `test`, a table of two template frames. On each pass, `#` is the current template frame, and `[mine]` is applied to it as the substitution value - filling in the `{what}` placeholder - giving one filled-in frame per item of `test`.
 
 
 
