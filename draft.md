@@ -69,11 +69,38 @@ When a table, a script, or a frame, gets updated, its new value is computed and 
 
 
 
+## Frames
+
+A frame is denoted between square brackets.
+
+The frame is essentially our **string type**. It's what Roverbanks is all about, the _lingua franca_ we'll be using for any and every thing.
+
+It can contain:
+- text,
+- a number,
+- a table,
+- scripts, which will be replaced by their value, and
+- nested frames, the content of which will be embedded as-is.
+
+```
+    [The result of [{ 4 + 4 }] is { 4 + 4 }.]
+
+=>  [The result of { 4 + 4 } is 8.]
+```
+
+A frame is therefore a *quasi-quoting* element, with included scripts acting as the "unquoted parts" of the quoted content.
+
+When a frame is rendered, newlines and spaces are preserved exactly (unlike what happens when a script is converted to a frame).
+
+A frame containing a number will be treated as a number when the context needs a number, for example when doing an addition.
+
+
+
 ## Tables
 
 A table is at once an array, an object or dictionary, and a set. The distinction is made by the choice of functions used to access it for reading/writing.
 
-The key of a table is always converted to a frame.
+The key of a table is always converted to a frame, each type in its canonical form (see [conversions](#conversions)).
 
 ```
     (
@@ -115,38 +142,11 @@ However, if the script manipulates multiple universes (sets of values), the resu
 - Same for the text `[4 + 4 =]`.
 - Then, a table of tables `((4, 4))` is applied to the value of the `sum` variable, which contains the source code of the script `{ {0} + {1} }`.
 - This table of tables contains only one table, which is interpreted as one universe (one set of values).
-- The application of this table of 1 universe to this script triggers the evaluation of the script, which is rendered as a table of 1 solution corresponding to the only given universe. Conceptually, this event *forks* the containing script evaluation (but in this case obviously, the fork contains only one universe).
+- The application of this table of 1 universe to this script code triggers the evaluation of the script, which is rendered as a table of 1 solution corresponding to the only given universe. Conceptually, this event *forks* the containing script evaluation (but in this case obviously, the fork contains only one universe).
 - The main containing script is then rendered as a table of values, containing the only value produced: `([MATH: 4 + 4 = 8])`
 - We then ask for the first of these values using `[0]`, which renders the final `[MATH: 4 + 4 = 8]`.
 
 When a script is evaluated and thus rendered as a frame, multiple consecutive newlines and spaces are replaced by a single space. That's why in our example, `MATH:` and `[4 + 4 =]` end up separated only by a space, instead of a newline plus indentation.
-
-
-
-## Frames
-
-A frame is denoted between brackets.
-
-The frame is a value of type string.
-
-It can contain:
-- text,
-- a number,
-- a table,
-- scripts, which will be replaced by their value, and
-- nested frames, which will be embedded as-is.
-
-```
-    [The result of [{ 4 + 4 }] is { 4 + 4 }.]
-
-=>  [The result of { 4 + 4 } is 8.]
-```
-
-A frame is therefore a *quasi-quoting* element, with included scripts acting as the "unquoted parts" of the quoted content.
-
-When a frame is rendered, newlines and spaces are preserved exactly (unlike what happens when a script is converted to a frame).
-
-A frame containing a number will be treated as a number when the context needs a number, for example when doing an addition.
 
 
 
@@ -219,6 +219,10 @@ Wildcards below are listed in increasing priority - an exact match always wins o
 ## Calling a script with arguments: `{...}()`
 
 This is the same as applying a table to a frame, see next section.
+
+Why is it the same? Because if you imagine an infinite nested layering of frames containing scripts containing frames containing scripts and so on... the only difference between a frame and a script is: what's the outermost layer? But beyond that, there's only one evaluation algorithm in the Roverbanks engine.
+
+This is why "calling a script with arguments" (applying a table of arguments to a script) is the same as applying a table to a frame.
 
 
 
@@ -377,11 +381,25 @@ Now we have conversion choices to make.
 | frame | script | The frame itself, as a literal value. |
 | frame | table | A 1-item table. |
 
-`{}` is the literal meaning "nothing".
+`{}` is a literal that means "nothing" (roughly "nil", "null", ...etc).
 
 `[]` is a frame that is empty.
 
 `()` is a table that is empty.
+
+**The table-to-frame conversion** always outputs the canonical form of the table:
+- no newline,
+- no space after `(` or before `)`,
+- no space before `:` but one space after,
+- no space before `,` but one space after,
+- nested tables recursively in their canonical form.
+
+**The script-to-frame conversion** that happens when a script is evaluated always outputs the canonical form of a script value:
+- every newline is converted to a space,
+- every tab is converted to a space,
+- several adjacent spaces are normalized to 1 space.
+
+Just keep in mind that when its evaluation forks on multiple universes, a script will render a _table of_ frames, in canonical form.
 
 
 
